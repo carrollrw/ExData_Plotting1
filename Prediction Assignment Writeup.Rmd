@@ -1,7 +1,7 @@
 ---
 title: "Prediction Assignmen Writeup"
 author: "Reginald W Carroll"
-date: "May 21, 2018"
+date: "May 23, 2018"
 output: html_document
 ---
 
@@ -73,6 +73,12 @@ qplot(classe, data=training,  main = "Activity Classes (Training Data)")
 ```{r}
 modelfit.rf <- randomForest(classe ~.,training)
 pred.rf <- predict(modelfit.rf,testing)
+
+```
+## View the Confusion Matrix
+Based on the Confusion Matrix summary, Sensitivity is .9986 and Specificity is .997 the balance accuracy is .9981
+
+```{r}
 cmatrix <- confusionMatrix(pred.rf,testing$classe)
 print(cmatrix)
 ```
