@@ -1,9 +1,9 @@
 ---
-title: "Prediction Assignment Writeup"
-output: github_document
+title: "Prediction Assignmen Writeup"
+author: "Reginald W Carroll"
+date: "May 21, 2018"
+output: html_document
 ---
-
-
 
 
 ## Practical Machine Learning - Pediction Assignment Writeup
@@ -20,8 +20,8 @@ library(randomForest)
 ```
 
 
-## Load Data (pml-training.csv and pml-testing.csv)
-## The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
+## Load Data (pml-training.csv and pml-testing.csv) 
+The data for this project come from this source: http://groupware.les.inf.puc-rio.br/har
 
 
 ```{r}
@@ -36,31 +36,29 @@ set.seed(23)
 train.noNA <- training[colSums(!is.na(training))>(nrow(training)*.9)]
 test       <- testing[colSums(!is.na(testing))>(nrow(testing)*.9)]
 ```
-##Remove the first 7 columns because they are not needed for calculation.
+## Remove the first 7 columns because they are not needed for calculation.
 ```{r}
 train.cleansese <- train.noNA[,-c(1:7)]
 ```
 
-##Removing highly correlated predictors.
- get only numeric columns
+## Removing highly correlated predictors. Get only numeric columns
  
 ```{r}
 num.cols <-sapply(train.cleansese,is.numeric)
 ```
-# make correlation matrix
+## Create a correlation matrix
 
 ```{r}
 cor.data <- cor(train.cleansese[,num.cols])
 ```
-# identify correlated predictors for removal
+## Identify correlated predictors for removal
 ```{r}
 high.cor <- findCorrelation(cor.data, cutoff = .75)
 train.cor <- train.cleansese[,-high.cor]
 train.cor$classe <- as.factor(train.cor$classe)
 ```
 
-## Split the data into training (75%) and testing (25%) datasets
-## to be used for Cross Validation 
+## Split the data into training (75%) and testing (25%) datasets to be used for Cross Validation 
 ```{r}
 inTrain <- createDataPartition(y=train.cor$classe,p=0.75,list=FALSE)
 training <- train.cor[inTrain,]
