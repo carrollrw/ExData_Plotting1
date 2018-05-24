@@ -1,7 +1,7 @@
 ---
 title: "Prediction Assignmen Writeup"
 author: "Reginald W Carroll"
-date: "May e, 2018"
+date: "May 24, 2018"
 output: html_document
 ---
 
