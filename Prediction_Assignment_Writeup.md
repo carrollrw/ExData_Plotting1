@@ -1,19 +1,24 @@
-Prediction Assignment Writeup
-================
-
-Install packages for the project
---------------------------------
-
 Practical Machine Learning - Pediction Assignment Writeup
 ---------------------------------------------------------
 
 Background:
 
-Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now
+possible to collect a large amount of data about personal activity
+relatively inexpensively. These type of devices are part of the
+quantified self movement - a group of enthusiasts who take measurements
+about themselves regularly to improve their health, to find patterns in
+their behavior, or because they are tech geeks. One thing that people
+regularly do is quantify how much of a particular activity they do, but
+they rarely quantify how well they do it. In this project, your goal
+will be to use data from accelerometers on the belt, forearm, arm, and
+dumbell of 6 participants. They were asked to perform barbell lifts
+correctly and incorrectly in 5 different ways.
 
-``` r
-library(tidyverse)
-```
+Install packages for the project
+--------------------------------
+
+    library(tidyverse)
 
     ## -- Attaching packages ---------------------------------- tidyverse 1.2.1 --
 
@@ -26,9 +31,7 @@ library(tidyverse)
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
-``` r
-library(caret)
-```
+    library(caret)
 
     ## Loading required package: lattice
 
@@ -39,9 +42,7 @@ library(caret)
     ## 
     ##     lift
 
-``` r
-library(randomForest)
-```
+    library(randomForest)
 
     ## randomForest 4.6-14
 
@@ -61,87 +62,71 @@ library(randomForest)
 Load Data (pml-training.csv and pml-testing.csv)
 ------------------------------------------------
 
-The data for this project come from this source: <http://groupware.les.inf.puc-rio.br/har>
-------------------------------------------------------------------------------------------
+The data for this project come from this source:
+<http://groupware.les.inf.puc-rio.br/har>
 
-``` r
-url.trainData <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-url.testData  <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
-training      <- read.csv(url(url.trainData), na.strings = c("NA", "", "#DIV0!"))
-testing       <- read.csv(url(url.testData), na.strings = c("NA", "", "#DIV0!"))
-set.seed(23)
-```
+    url.trainData <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+    url.testData  <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+    training      <- read.csv(url(url.trainData), na.strings = c("NA", "", "#DIV0!"))
+    testing       <- read.csv(url(url.testData), na.strings = c("NA", "", "#DIV0!"))
+    set.seed(23)
 
 Cleansing the data
 ------------------
 
-``` r
-train.noNA <- training[colSums(!is.na(training))>(nrow(training)*.9)]
-test       <- testing[colSums(!is.na(testing))>(nrow(testing)*.9)]
-```
+    train.noNA <- training[colSums(!is.na(training))>(nrow(training)*.9)]
+    test       <- testing[colSums(!is.na(testing))>(nrow(testing)*.9)]
 
 Remove the first 7 columns because they are not needed for calculation.
 -----------------------------------------------------------------------
 
-``` r
-train.cleansese <- train.noNA[,-c(1:7)]
-```
+    train.cleansese <- train.noNA[,-c(1:7)]
 
-Removing highly correlated predictors.
---------------------------------------
+Removing highly correlated predictors. Get only numeric columns
+---------------------------------------------------------------
 
-get only numeric columns
+    num.cols <-sapply(train.cleansese,is.numeric)
 
-``` r
-num.cols <-sapply(train.cleansese,is.numeric)
-```
+Create a correlation matrix
+---------------------------
 
-make correlation matrix
-=======================
+    cor.data <- cor(train.cleansese[,num.cols])
 
-``` r
-cor.data <- cor(train.cleansese[,num.cols])
-```
+Identify correlated predictors for removal
+------------------------------------------
 
-identify correlated predictors for removal
-==========================================
+    high.cor <- findCorrelation(cor.data, cutoff = .75)
+    train.cor <- train.cleansese[,-high.cor]
+    train.cor$classe <- as.factor(train.cor$classe)
 
-``` r
-high.cor <- findCorrelation(cor.data, cutoff = .75)
-train.cor <- train.cleansese[,-high.cor]
-train.cor$classe <- as.factor(train.cor$classe)
-```
+Split the data into training (75%) and testing (25%) datasets to be used for Cross Validation
+---------------------------------------------------------------------------------------------
 
-Split the data into training (75%) and testing (25%) datasets
--------------------------------------------------------------
-
-to be used for Cross Validation
--------------------------------
-
-``` r
-inTrain <- createDataPartition(y=train.cor$classe,p=0.75,list=FALSE)
-training <- train.cor[inTrain,]
-testing <- train.cor[-inTrain,]
-```
+    inTrain <- createDataPartition(y=train.cor$classe,p=0.75,list=FALSE)
+    training <- train.cor[inTrain,]
+    testing <- train.cor[-inTrain,]
 
 Plot the training dataset
 -------------------------
 
-``` r
-qplot(classe, data=training,  main = "Activity Classes (Training Data)")
-```
+    qplot(classe, data=training,  main = "Activity Classes (Training Data)")
 
-![](Prediction_Assignment_Writeup_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](Prediction_Assignment_Writeup_files/figure-markdown_strict/unnamed-chunk-9-1.png)
 
 Train the model using RandomForest
 ----------------------------------
 
-``` r
-modelfit.rf <- randomForest(classe ~.,training)
-pred.rf <- predict(modelfit.rf,testing)
-cmatrix <- confusionMatrix(pred.rf,testing$classe)
-print(cmatrix)
-```
+    modelfit.rf <- randomForest(classe ~.,training)
+    pred.rf <- predict(modelfit.rf,testing)
+
+View the Confusion Matrix
+-------------------------
+
+Based on the Confusion Matrix summary, Sensitivity is .9993 and
+Specificity is .9991 the balance accuracy is .9992
+
+    cmatrix <- confusionMatrix(pred.rf,testing$classe)
+    print(cmatrix)
 
     ## Confusion Matrix and Statistics
     ## 
@@ -178,16 +163,13 @@ print(cmatrix)
 Plot model fit
 --------------
 
-``` r
-plot(modelfit.rf)
-```
+    plot(modelfit.rf)
 
-![](Prediction_Assignment_Writeup_files/figure-markdown_github/unnamed-chunk-11-1.png) \#\# Final prediction using the test dataset (pml-testing.csv)
+![](Prediction_Assignment_Writeup_files/figure-markdown_strict/unnamed-chunk-12-1.png)
+\#\# Final prediction using the test dataset (pml-testing.csv)
 
-``` r
-final.pred <- predict(modelfit.rf, test, type = "class")
-print(final.pred)
-```
+    final.pred <- predict(modelfit.rf, test, type = "class")
+    print(final.pred)
 
     ##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
     ##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
@@ -196,14 +178,6 @@ print(final.pred)
 Plot the Final predictiion
 --------------------------
 
-``` r
-plot(final.pred)
-```
+    qplot(final.pred, main = "Activity Classes (Test Data)")
 
-![](Prediction_Assignment_Writeup_files/figure-markdown_github/unnamed-chunk-13-1.png)
-
-``` r
-qplot(final.pred, main = "Activity Classes (Test Data)")
-```
-
-![](Prediction_Assignment_Writeup_files/figure-markdown_github/unnamed-chunk-13-2.png)
+![](Prediction_Assignment_Writeup_files/figure-markdown_strict/unnamed-chunk-14-1.png)
