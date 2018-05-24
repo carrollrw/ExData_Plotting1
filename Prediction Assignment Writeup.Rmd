@@ -1,7 +1,7 @@
 ---
 title: "Prediction Assignmen Writeup"
 author: "Reginald W Carroll"
-date: "May 23, 2018"
+date: "May e, 2018"
 output: html_document
 ---
 
@@ -76,7 +76,7 @@ pred.rf <- predict(modelfit.rf,testing)
 
 ```
 ## View the Confusion Matrix
-Based on the Confusion Matrix summary, Sensitivity is .9986 and Specificity is .997 the balance accuracy is .9981
+Based on the Confusion Matrix summary, Sensitivity is .9993 and Specificity is .9991 the balance accuracy is .9992
 
 ```{r}
 cmatrix <- confusionMatrix(pred.rf,testing$classe)
@@ -92,10 +92,7 @@ plot(modelfit.rf)
 final.pred <- predict(modelfit.rf, test, type = "class")
 print(final.pred)
 ```
-
 ## Plot the Final predictiion
 ```{r}
-plot(final.pred)
 qplot(final.pred, main = "Activity Classes (Test Data)")
 ```
-
